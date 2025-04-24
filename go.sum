@@ -1,0 +1,4 @@
+github.com/fivethirty/go-server-things v0.0.11 h1:XtDrOk5i94HUxqLTOR/E/M0M69r98qpdzl1BJ42Bb2Y=
+github.com/fivethirty/go-server-things v0.0.11/go.mod h1:W6uAM7n2WOeaVgevzhXMmDEssHC+jcgc1uYMtAHIMAA=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
