@@ -13,7 +13,7 @@ import (
 	"github.com/fivethirty/middest/internal/response"
 )
 
-func New(logger *ctxAwareLogger) func(http.Handler) http.Handler {
+func New(logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
@@ -69,19 +69,13 @@ type contextKey string
 
 const slogFields contextKey = "slog_fields"
 
-var DefaultLogger *ctxAwareLogger = NewLogger(os.Stdout)
+var DefaultLogger *slog.Logger = NewLogger(os.Stdout)
 
-type ctxAwareLogger struct {
-	slog.Logger
-}
-
-func NewLogger(w io.Writer) *ctxAwareLogger {
+func NewLogger(w io.Writer) *slog.Logger {
 	handler := &contextHandler{
 		Handler: slog.NewJSONHandler(w, nil),
 	}
-	return &ctxAwareLogger{
-		*slog.New(handler),
-	}
+	return slog.New(handler)
 }
 
 type contextHandler struct {
