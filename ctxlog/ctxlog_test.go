@@ -1,14 +1,50 @@
-package middleware_test
+package ctxlog_test
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
-	"github.com/fivethirty/hypem/middleware"
+	"github.com/fivethirty/middest/ctxlog"
+	"github.com/fivethirty/middest/internal/testhandler"
 )
+
+type logEntry struct {
+	Level         string        `json:"level"`
+	Message       string        `json:"msg"`
+	Status        int           `json:"status"`
+	Method        string        `json:"method"`
+	Path          string        `json:"path"`
+	Params        url.Values    `json:"params"`
+	RequestID     string        `json:"request_id"`
+	Duration      time.Duration `json:"duration"`
+	ContentLength int           `json:"content_length"`
+	UserID        string        `json:"user_id"`
+}
+
+func logs(buffer *bytes.Buffer, t *testing.T) []logEntry {
+	t.Helper()
+	var entries []logEntry
+	dec := json.NewDecoder(buffer)
+	for {
+		var entry logEntry
+		if err := dec.Decode(&entry); err == io.EOF {
+			break
+		} else if err != nil {
+			t.Fatal(err)
+		}
+		entries = append(entries, entry)
+	}
+	return entries
+}
 
 func TestLog(t *testing.T) {
 	t.Parallel()
@@ -51,8 +87,9 @@ func TestLog(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tm := newTestMiddleware()
-			wrapped := tm.Log(handler(t, tt.status, tt.size))
+			buffer := bytes.NewBuffer(nil)
+			logger := ctxlog.NewLogger(buffer)
+			wrapped := ctxlog.New(logger)(testhandler.New(t, tt.status, tt.size))
 			req := httptest.NewRequest(http.MethodPost, tt.path, nil)
 			if tt.userID != "" {
 				req.Context()
@@ -60,7 +97,7 @@ func TestLog(t *testing.T) {
 			w := httptest.NewRecorder()
 			wrapped.ServeHTTP(w, req)
 
-			entries := tm.logs(t)
+			entries := logs(buffer, t)
 			if len(entries) != 1 {
 				t.Fatalf("expected 1 log entry, got %d", len(entries))
 			}
@@ -99,55 +136,50 @@ func TestLog(t *testing.T) {
 	}
 }
 
-func TestLogWithUserID(t *testing.T) {
+func TestLogsWithContext(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name   string
-		userID string
+		name  string
+		attrs []slog.Attr
 	}{
 		{
-			name:   "should set user ID ",
-			userID: "user_1",
+			name: "no attributes",
 		},
 		{
-			name:   "should handle empty user ID",
-			userID: "user_1",
+			name: "attributes",
+			attrs: []slog.Attr{
+				slog.String("key", "value"),
+				slog.Int("int", 101),
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tm := newTestMiddleware()
-			ctxUserID := ""
-			wrapped := tm.Log(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				if tt.userID != "" {
-					err := middleware.SetUserID(r.Context(), tt.userID)
-					if err != nil {
-						t.Fatal(err)
-					}
-					ctxUserID, err = middleware.UserID(r.Context())
-					if err != nil {
-						t.Fatal(err)
-					}
-				}
-			}))
-			req := httptest.NewRequest(http.MethodPost, "/", nil)
-			w := httptest.NewRecorder()
-			wrapped.ServeHTTP(w, req)
+			buffer := bytes.NewBuffer(nil)
+			ctx := context.Background()
+			for _, attr := range tt.attrs {
+				ctx = ctxlog.AppendCtx(ctx, attr)
+			}
 
-			if ctxUserID != tt.userID {
-				t.Errorf("expected user ID in context %s, got %s", tt.userID, ctxUserID)
+			logger := ctxlog.NewLogger(buffer)
+			logger.Log(ctx, slog.LevelInfo, "test")
+			var entry map[string]any
+			dec := json.NewDecoder(buffer)
+			if err := dec.Decode(&entry); err != nil {
+				t.Fatal(err)
 			}
-			entries := tm.logs(t)
-			if len(entries) != 1 {
-				t.Fatalf("expected 1 log entry, got %d", len(entries))
-			}
-			entry := entries[0]
-			if entry.UserID != tt.userID {
-				t.Errorf("expected user ID %s in logs, got %s", tt.userID, entry.UserID)
+			for _, attr := range tt.attrs {
+				value, ok := entry[attr.Key]
+				if !ok {
+					t.Errorf("value for key %s not found in logs", attr.Key)
+				}
+				strValue := fmt.Sprintf("%v", value)
+				if strValue != attr.Value.String() {
+					t.Errorf("expected %v but got %v", attr.Value.Any(), strValue)
+				}
 			}
 		})
 	}

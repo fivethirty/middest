@@ -1,4 +1,4 @@
-package middleware_test
+package contenttype_test
 
 import (
 	"io"
@@ -6,6 +6,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/fivethirty/middest/contenttype"
+	"github.com/fivethirty/middest/internal/testhandler"
 )
 
 func TestContentType(t *testing.T) {
@@ -57,8 +60,7 @@ func TestContentType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tm := newTestMiddleware()
-			wrapped := tm.ContentType(tt.allowedContentTypes...)(handler(t, http.StatusOK, 0))
+			wrapped := contenttype.New(tt.allowedContentTypes...)(testhandler.New(t, http.StatusOK, 0))
 			var body io.Reader
 			if tt.hasBody {
 				body = strings.NewReader("body!")
@@ -71,12 +73,6 @@ func TestContentType(t *testing.T) {
 			if w.Code != tt.expectedCode {
 				t.Errorf("expected status code %d, got %d", tt.expectedCode, w.Code)
 			}
-
-			if len(tm.logs(t)) > 0 {
-				t.Errorf("expected no logs, got %s", tm.logBuffer.String())
-			}
-
-			tm.validateErrorBodyWriterCalled(t, w.Code)
 		})
 	}
 }

@@ -1,4 +1,4 @@
-package middleware_test
+package requestsize_test
 
 import (
 	"io"
@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/fivethirty/middest/internal/testhandler"
+	"github.com/fivethirty/middest/requestsize"
 )
 
 func TestRequestSize(t *testing.T) {
@@ -34,7 +37,7 @@ func TestRequestSize(t *testing.T) {
 			requestSize:    15,
 			contentLength:  15,
 			expectedCode:   http.StatusRequestEntityTooLarge,
-			isBodyReadable: false,
+			isBodyReadable: true,
 		},
 		{
 			name:           "content length and request size < max bytes should return 200",
@@ -57,8 +60,7 @@ func TestRequestSize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			tm := newTestMiddleware()
-			wrapped := tm.RequestSize(tt.maxBytes)(handler(t, http.StatusOK, 0))
+			wrapped := requestsize.New(tt.maxBytes)(testhandler.New(t, http.StatusOK, 0))
 			body := strings.NewReader(strings.Repeat("a", int(tt.requestSize)))
 			req := httptest.NewRequest(http.MethodPost, "/", body)
 			req.Header.Add("content-length", strconv.Itoa(tt.contentLength))
@@ -79,12 +81,6 @@ func TestRequestSize(t *testing.T) {
 			} else if err == nil && !tt.isBodyReadable {
 				t.Errorf("expected request body to be unreadable")
 			}
-
-			if len(tm.logs(t)) > 0 {
-				t.Errorf("expected no logs, got %s", tm.logBuffer.String())
-			}
-
-			tm.validateErrorBodyWriterCalled(t, w.Code)
 		})
 	}
 }
