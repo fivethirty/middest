@@ -29,5 +29,8 @@ func (rw *ResponseWriter) WriteHeader(code int) {
 func (rw *ResponseWriter) Write(body []byte) (int, error) {
 	bytesWritten, err := rw.ResponseWriter.Write(body)
 	rw.BytesWritten += int64(bytesWritten)
+	if rw.BytesWritten > 0 {
+		rw.IsHeaderWritten = true
+	}
 	return bytesWritten, err
 }
