@@ -57,18 +57,18 @@ func TestRequestSize(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			wrapped := requestsize.New(tt.maxBytes)(testhandler.New(t, http.StatusOK, 0))
-			body := strings.NewReader(strings.Repeat("a", int(tt.requestSize)))
+			wrapped := requestsize.New(test.maxBytes)(testhandler.New(t, http.StatusOK, 0))
+			body := strings.NewReader(strings.Repeat("a", int(test.requestSize)))
 			req := httptest.NewRequest(http.MethodPost, "/", body)
-			req.Header.Add("content-length", strconv.Itoa(tt.contentLength))
+			req.Header.Add("content-length", strconv.Itoa(test.contentLength))
 			w := httptest.NewRecorder()
 			wrapped.ServeHTTP(w, req)
 
-			if w.Code != tt.expectedCode {
-				t.Errorf("expected status code %d, got %d", tt.expectedCode, w.Code)
+			if w.Code != test.expectedCode {
+				t.Errorf("expected status code %d, got %d", test.expectedCode, w.Code)
 			}
 			_, err := io.ReadAll(req.Body)
 			_, ok := err.(*http.MaxBytesError)
@@ -76,9 +76,9 @@ func TestRequestSize(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if ok && tt.isBodyReadable {
+			if ok && test.isBodyReadable {
 				t.Errorf("expected request body to be readable but got error: %+v", err)
-			} else if err == nil && !tt.isBodyReadable {
+			} else if err == nil && !test.isBodyReadable {
 				t.Errorf("expected request body to be unreadable")
 			}
 		})

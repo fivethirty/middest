@@ -57,21 +57,21 @@ func TestContentType(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			wrapped := contenttype.New(tt.allowedContentTypes...)(testhandler.New(t, http.StatusOK, 0))
+			wrapped := contenttype.New(test.allowedContentTypes...)(testhandler.New(t, http.StatusOK, 0))
 			var body io.Reader
-			if tt.hasBody {
+			if test.hasBody {
 				body = strings.NewReader("body!")
 			}
 			req := httptest.NewRequest(http.MethodPost, "/", body)
-			req.Header.Add("content-type", tt.contentType)
+			req.Header.Add("content-type", test.contentType)
 			w := httptest.NewRecorder()
 			wrapped.ServeHTTP(w, req)
 
-			if w.Code != tt.expectedCode {
-				t.Errorf("expected status code %d, got %d", tt.expectedCode, w.Code)
+			if w.Code != test.expectedCode {
+				t.Errorf("expected status code %d, got %d", test.expectedCode, w.Code)
 			}
 		})
 	}
