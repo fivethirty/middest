@@ -62,20 +62,20 @@ func TestResponseWriter(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
 			w := response.Wrap(http.ResponseWriter(&fakeResponseWriter{}))
-			tt.fn(w)
-			if w.Status != tt.expected.Status {
-				t.Errorf("expected status %d, got %d", tt.expected.Status, w.Status)
+			test.fn(w)
+			if w.Status != test.expected.Status {
+				t.Errorf("expected status %d, got %d", test.expected.Status, w.Status)
 			}
-			if w.BytesWritten != tt.expected.BytesWritten {
-				t.Errorf("expected bytes written %d, got %d", tt.expected.BytesWritten, w.BytesWritten)
+			if w.BytesWritten != test.expected.BytesWritten {
+				t.Errorf("expected bytes written %d, got %d", test.expected.BytesWritten, w.BytesWritten)
 			}
-			if w.IsHeaderWritten != tt.expected.IsHeaderWritten {
-				t.Errorf("expected header written %v, got %v", tt.expected.IsHeaderWritten, w.IsHeaderWritten)
+			if w.IsHeaderWritten != test.expected.IsHeaderWritten {
+				t.Errorf("expected header written %v, got %v", test.expected.IsHeaderWritten, w.IsHeaderWritten)
 			}
 		})
 	}

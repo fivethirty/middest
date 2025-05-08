@@ -84,14 +84,14 @@ func TestLog(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			buffer := bytes.NewBuffer(nil)
 			logger := ctxlog.NewLogger(buffer)
-			wrapped := ctxlog.New(logger)(testhandler.New(t, tt.status, tt.size))
-			req := httptest.NewRequest(http.MethodPost, tt.path, nil)
-			if tt.userID != "" {
+			wrapped := ctxlog.New(logger)(testhandler.New(t, test.status, test.size))
+			req := httptest.NewRequest(http.MethodPost, test.path, nil)
+			if test.userID != "" {
 				req.Context()
 			}
 			w := httptest.NewRecorder()
@@ -102,18 +102,18 @@ func TestLog(t *testing.T) {
 				t.Fatalf("expected 1 log entry, got %d", len(entries))
 			}
 			entry := entries[0]
-			if entry.Level != tt.level.String() {
-				t.Errorf("expected log level %s, got %s", tt.level.String(), entry.Level)
+			if entry.Level != test.level.String() {
+				t.Errorf("expected log level %s, got %s", test.level.String(), entry.Level)
 			}
-			if entry.Method != tt.method {
-				t.Errorf("expected method %s, got %s", tt.method, entry.Method)
+			if entry.Method != test.method {
+				t.Errorf("expected method %s, got %s", test.method, entry.Method)
 			}
-			u, err := url.Parse(tt.path)
+			u, err := url.Parse(test.path)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if entry.Path != u.Path {
-				t.Errorf("expected path %s, got %s", tt.path, entry.Path)
+				t.Errorf("expected path %s, got %s", test.path, entry.Path)
 			}
 			if len(entry.Params) != len(u.Query()) {
 				t.Errorf("expected %d params, got %d", len(u.Query()), len(entry.Params))
@@ -129,8 +129,8 @@ func TestLog(t *testing.T) {
 			if entry.Duration == 0 {
 				t.Error("expected duration to > 0")
 			}
-			if entry.ContentLength != tt.size {
-				t.Errorf("expected content length %d, got %d", tt.size, entry.ContentLength)
+			if entry.ContentLength != test.size {
+				t.Errorf("expected content length %d, got %d", test.size, entry.ContentLength)
 			}
 		})
 	}
@@ -155,12 +155,12 @@ func TestLogsWithContext(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			buffer := bytes.NewBuffer(nil)
 			ctx := context.Background()
-			for _, attr := range tt.attrs {
+			for _, attr := range test.attrs {
 				ctx = ctxlog.AppendCtx(ctx, attr)
 			}
 
@@ -171,7 +171,7 @@ func TestLogsWithContext(t *testing.T) {
 			if err := dec.Decode(&entry); err != nil {
 				t.Fatal(err)
 			}
-			for _, attr := range tt.attrs {
+			for _, attr := range test.attrs {
 				value, ok := entry[attr.Key]
 				if !ok {
 					t.Errorf("value for key %s not found in logs", attr.Key)

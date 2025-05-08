@@ -74,8 +74,8 @@ func TestWriteMissingErrorBody(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			errs := errs.New(writeError, slog.Default())
 			handler := func(next http.Handler) http.Handler {
@@ -85,16 +85,16 @@ func TestWriteMissingErrorBody(t *testing.T) {
 					}()
 					next.ServeHTTP(w, r)
 				})
-			}(errs.WriteMissingErrorBody(tt.handler))
+			}(errs.WriteMissingErrorBody(test.handler))
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, req)
 
-			if w.Code != tt.expectedCode {
-				t.Errorf("expected status code %d, got %d", tt.expectedCode, w.Code)
+			if w.Code != test.expectedCode {
+				t.Errorf("expected status code %d, got %d", test.expectedCode, w.Code)
 			}
-			if w.Body.String() != tt.expetedBody {
-				t.Errorf("expected body %q, got %q", tt.expetedBody, w.Body.String())
+			if w.Body.String() != test.expetedBody {
+				t.Errorf("expected body %q, got %q", test.expetedBody, w.Body.String())
 			}
 		})
 	}
@@ -129,13 +129,13 @@ func TestToHandlerFunc(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
 			e := errs.New(writeError, slog.Default())
 			handler := e.ToHandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
-				return tt.err
+				return test.err
 			})
 
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -143,11 +143,11 @@ func TestToHandlerFunc(t *testing.T) {
 
 			handler(w, req)
 
-			if w.Code != tt.expectedStatus {
-				t.Errorf("expected status %d, got %d", tt.expectedStatus, w.Code)
+			if w.Code != test.expectedStatus {
+				t.Errorf("expected status %d, got %d", test.expectedStatus, w.Code)
 			}
 
-			statusErr, isStatusErr := tt.err.(errs.StatusError)
+			statusErr, isStatusErr := test.err.(errs.StatusError)
 			if isStatusErr && statusErr.ResponseMessage != "" && w.Body.String() != statusErr.ResponseMessage {
 				t.Errorf("expected response message %q, got %q", statusErr.ResponseMessage, w.Body.String())
 			} else if !isStatusErr && statusErr.ResponseMessage != "" {

@@ -41,17 +41,17 @@ func TestRecover(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			logger := &testLogger{}
-			wrapped := recoverer.New(logger)(tt.handler)
+			wrapped := recoverer.New(logger)(test.handler)
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			w := httptest.NewRecorder()
 			wrapped.ServeHTTP(w, req)
 
-			if logger.logCount != tt.expectedLogs {
-				t.Errorf("expected %d logs, got %d", tt.expectedLogs, logger.logCount)
+			if logger.logCount != test.expectedLogs {
+				t.Errorf("expected %d logs, got %d", test.expectedLogs, logger.logCount)
 			}
 		})
 	}
