@@ -16,6 +16,7 @@ type fakeResponseWriter struct{}
 func (f *fakeResponseWriter) Header() http.Header {
 	return http.Header{}
 }
+
 func (f *fakeResponseWriter) Write([]byte) (int, error) {
 	return fakeBytesWritten, nil
 }
@@ -52,7 +53,7 @@ func TestResponseWriter(t *testing.T) {
 		{
 			name: "write body",
 			fn: func(w *response.ResponseWriter) {
-				w.Write([]byte("Hello, World!"))
+				_, _ = w.Write([]byte("Hello, World!"))
 			},
 			expected: response.ResponseWriter{
 				Status:          200,
@@ -72,10 +73,18 @@ func TestResponseWriter(t *testing.T) {
 				t.Errorf("expected status %d, got %d", test.expected.Status, w.Status)
 			}
 			if w.BytesWritten != test.expected.BytesWritten {
-				t.Errorf("expected bytes written %d, got %d", test.expected.BytesWritten, w.BytesWritten)
+				t.Errorf(
+					"expected bytes written %d, got %d",
+					test.expected.BytesWritten,
+					w.BytesWritten,
+				)
 			}
 			if w.IsHeaderWritten != test.expected.IsHeaderWritten {
-				t.Errorf("expected header written %v, got %v", test.expected.IsHeaderWritten, w.IsHeaderWritten)
+				t.Errorf(
+					"expected header written %v, got %v",
+					test.expected.IsHeaderWritten,
+					w.IsHeaderWritten,
+				)
 			}
 		})
 	}
