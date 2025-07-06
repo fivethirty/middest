@@ -61,7 +61,7 @@ func TestRequestSize(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			wrapped := requestsize.New(test.maxBytes)(testhandler.New(t, http.StatusOK, 0))
-			body := strings.NewReader(strings.Repeat("a", int(test.requestSize)))
+			body := strings.NewReader(strings.Repeat("a", test.requestSize))
 			req := httptest.NewRequest(http.MethodPost, "/", body)
 			req.Header.Add("content-length", strconv.Itoa(test.contentLength))
 			w := httptest.NewRecorder()

@@ -60,7 +60,10 @@ func TestContentType(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			wrapped := contenttype.New(test.allowedContentTypes...)(testhandler.New(t, http.StatusOK, 0))
+			wrapped := contenttype.New(
+				test.allowedContentTypes...)(
+				testhandler.New(t, http.StatusOK, 0),
+			)
 			var body io.Reader
 			if test.hasBody {
 				body = strings.NewReader("body!")

@@ -148,8 +148,13 @@ func TestToHandlerFunc(t *testing.T) {
 			}
 
 			statusErr, isStatusErr := test.err.(errs.StatusError)
-			if isStatusErr && statusErr.ResponseMessage != "" && w.Body.String() != statusErr.ResponseMessage {
-				t.Errorf("expected response message %q, got %q", statusErr.ResponseMessage, w.Body.String())
+			if isStatusErr && statusErr.ResponseMessage != "" &&
+				w.Body.String() != statusErr.ResponseMessage {
+				t.Errorf(
+					"expected response message %q, got %q",
+					statusErr.ResponseMessage,
+					w.Body.String(),
+				)
 			} else if !isStatusErr && statusErr.ResponseMessage != "" {
 				t.Errorf("expected response message to be empty, got %q", w.Body.String())
 			}
