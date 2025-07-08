@@ -29,11 +29,7 @@ func New(logger *slog.Logger) func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := AppendCtx(r.Context(), slog.String("method", r.Method))
-			ctx = AppendCtx(ctx, slog.String("path", r.URL.EscapedPath()))
-			ctx = AppendCtx(ctx, slog.Any("params", r.URL.Query()))
-			ctx = AppendCtx(ctx, slog.String("request_id", requestID))
-
+			ctx := AppendCtx(r.Context(), slog.String("request_id", requestID))
 			r = r.WithContext(ctx)
 
 			next.ServeHTTP(wrapped, r)
@@ -42,10 +38,14 @@ func New(logger *slog.Logger) func(http.Handler) http.Handler {
 			if wrapped.Status >= 400 {
 				level = slog.LevelError
 			}
+
 			logger.Log(
-				ctx,
+				r.Context(),
 				level,
 				"Request",
+				"method", r.Method,
+				"path", r.URL.Path,
+				"params", r.URL.Query(),
 				"status", wrapped.Status,
 				"duration", time.Since(start),
 				"content_length", wrapped.BytesWritten,
