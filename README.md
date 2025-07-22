@@ -6,12 +6,12 @@ Go middleware collection created with hypermedia applications in mind.
 
 ## Modules
 
-- `ctxlog`: Structured request logging with automatic request ID generation
-- `recoverer`: Graceful panic recovery with stack trace logging
+- `ctxlog`: Structured request logging
+- `recoverer`: Panic recovery with 
 - `requestsize`: Request body size limiting
-- `contenttype`: Content type handling
+- `contenttype`: Content type filtering
 - `errs`: Error handling utilities
-- `handlers`: Helper for composing multiple middleware
+- `handlers`: Helper for composing middleware
 
 ## Usage
 
