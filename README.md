@@ -1,6 +1,6 @@
 # middest
 
-![test status](https://github.com/fivethirty/middest/actions/workflows/test.yml/badge.svg)
+![test status](https://github.com/fivethirty/middest/actions/workflows/checks.yml/badge.svg)
 
 Go middleware collection created with hypermedia applications in mind.
 
