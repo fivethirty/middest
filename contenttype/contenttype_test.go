@@ -22,6 +22,20 @@ func TestContentType(t *testing.T) {
 		hasBody             bool
 	}{
 		{
+			name:                "content type with parameters and request body should return 200",
+			allowedContentTypes: []string{"application/x-www-form-urlencoded"},
+			contentType:         "application/x-www-form-urlencoded;charset=UTF-8",
+			expectedCode:        http.StatusOK,
+			hasBody:             true,
+		},
+		{
+			name:                "malformed content type with request body should return 415",
+			allowedContentTypes: []string{"application/x-www-form-urlencoded"},
+			contentType:         "not a media type",
+			expectedCode:        http.StatusUnsupportedMediaType,
+			hasBody:             true,
+		},
+		{
 			name:                "invalid content type with request body should return 415",
 			allowedContentTypes: []string{"application/x-www-form-urlencoded"},
 			contentType:         "application/json",
