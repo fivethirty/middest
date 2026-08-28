@@ -29,10 +29,10 @@ func TestContentType(t *testing.T) {
 			hasBody:             true,
 		},
 		{
-			name:                "malformed content type with request body should return 415",
+			name:                "malformed content type with request body should return 400",
 			allowedContentTypes: []string{"application/x-www-form-urlencoded"},
 			contentType:         "not a media type",
-			expectedCode:        http.StatusUnsupportedMediaType,
+			expectedCode:        http.StatusBadRequest,
 			hasBody:             true,
 		},
 		{

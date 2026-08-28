@@ -15,7 +15,11 @@ func New(contentTypes ...string) func(http.Handler) http.Handler {
 			}
 			contentType := r.Header.Get("content-type")
 			mediaType, _, err := mime.ParseMediaType(contentType)
-			if err != nil || !slices.Contains(contentTypes, mediaType) {
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if !slices.Contains(contentTypes, mediaType) {
 				w.WriteHeader(http.StatusUnsupportedMediaType)
 				return
 			}
