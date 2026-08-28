@@ -1,6 +1,7 @@
 package contenttype
 
 import (
+	"mime"
 	"net/http"
 	"slices"
 )
@@ -13,11 +14,16 @@ func New(contentTypes ...string) func(http.Handler) http.Handler {
 				return
 			}
 			contentType := r.Header.Get("content-type")
-			if slices.Contains(contentTypes, contentType) {
-				next.ServeHTTP(w, r)
+			mediaType, _, err := mime.ParseMediaType(contentType)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			w.WriteHeader(http.StatusUnsupportedMediaType)
+			if !slices.Contains(contentTypes, mediaType) {
+				w.WriteHeader(http.StatusUnsupportedMediaType)
+				return
+			}
+			next.ServeHTTP(w, r)
 		})
 	}
 }
